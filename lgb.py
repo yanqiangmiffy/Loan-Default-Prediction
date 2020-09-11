@@ -193,7 +193,8 @@ lgb_params = {
     'cat_smooth': 10.4,
     'subsample': 0.7,
     'colsample_bytree': 0.7,
-    'n_jobs': -1
+    'n_jobs': -1,
+    'metric':'auc'
     # 'verbosity': 1,
 }
 
