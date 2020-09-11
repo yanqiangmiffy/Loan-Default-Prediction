@@ -1,5 +1,7 @@
 # 贷款违约预测
 
+## 特征
+![](others/features_importance.png)
 ## 模型
 
 ### lightgbm
