@@ -28,6 +28,7 @@ from tqdm import tqdm
 import warnings
 import datetime
 from sklearn.preprocessing import LabelEncoder
+
 warnings.filterwarnings("ignore")
 
 tqdm.pandas()
@@ -105,13 +106,13 @@ def load_data():
 
     # =============== 长尾分布特征处理 ================
     cat_list = [i for i in train.columns if i not in ['id', 'isDefault', 'policyCode']]
-    for i in tqdm(cat_list):
+    for i in tqdm(cat_list, desc="长尾分布特征处理"):
         if data[i].nunique() > 3:
             data['{}_count'.format(i)] = data.groupby(['{}'.format(i)])['id'].transform('count')
     # ===================== 分箱特征 ===============
     amount_feas = ['loanAmnt', 'interestRate', 'installment', 'annualIncome', 'dti',
                    'ficoRangeLow', 'ficoRangeHigh', 'openAcc', 'revolBal', 'revolUtil', 'totalAcc']
-    for fea in tqdm(amount_feas):
+    for fea in tqdm(amount_feas, desc="分箱特征"):
         # 通过除法映射到间隔均匀的分箱中，每个分箱的取值范围都是loanAmnt/100
         data['{}_bin1'.format(fea)] = np.floor_divide(data[fea], 100)
         ## 通过对数函数映射到指数宽度分箱
@@ -121,29 +122,36 @@ def load_data():
 
     # ==================== 特征交互 ==================
     # 其他衍生变量 mean 和 std
-    for item in tqdm(['n0', 'n1', 'n2', 'n2.1', 'n4', 'n5', 'n6', 'n7', 'n8', 'n9', 'n10', 'n11', 'n12', 'n13', 'n14']):
+    for item in tqdm(['n0', 'n1', 'n2', 'n2.1', 'n4', 'n5', 'n6', 'n7', 'n8', 'n9', 'n10', 'n11', 'n12', 'n13', 'n14'],
+                     desc="其他衍生变量 mean 和 std"):
         data['grade_to_mean_' + item] = data['grade'] / data.groupby([item])['grade'].transform('mean')
         data['grade_to_std_' + item] = data['grade'] / data.groupby([item])['grade'].transform('std')
 
     # 类别特征nunique特征
-    nuni_feat = cat_list
-    multi_feat = cat_list
-    for i in tqdm(nuni_feat):
+    nuni_feat = ['grade', 'subGrade', 'employmentTitle',
+                 'homeOwnership', 'verificationStatus', 'purpose',
+                 'postCode', 'regionCode',
+                 'applicationType', 'initialListStatus', 'title']
+    multi_feat = ['grade', 'subGrade', 'employmentTitle',
+                  'homeOwnership', 'verificationStatus', 'purpose',
+                  'postCode', 'regionCode',
+                  'applicationType', 'initialListStatus', 'title']
+    for i in tqdm(nuni_feat, desc="类别特征nunique特征"):
         for j in multi_feat:
             if i != j:
                 data['nuni_{0}_{1}'.format(i, j)] = data[i].map(data.groupby(i)[j].nunique())
 
     # ===================== 五折转化率特征 ====================
-    cat_list = ['grade', 'subGrade', 'employmentTitle',
-                'homeOwnership', 'verificationStatus', 'purpose',
-                'postCode', 'regionCode',
-                'applicationType', 'initialListStatus', 'title']
+    # cat_list = ['grade', 'subGrade', 'employmentTitle',
+    #             'homeOwnership', 'verificationStatus', 'purpose',
+    #             'postCode', 'regionCode',
+    #             'applicationType', 'initialListStatus', 'title']
 
     data['ID'] = data.index
     data['fold'] = data['ID'] % 5
     data.loc[data['isDefault'].isnull(), 'fold'] = 5
     target_feat = []
-    for i in tqdm(cat_list):
+    for i in tqdm(cat_list, desc="5折转化率特征"):
         target_feat.extend([i + '_mean_last_1'])
         data[i + '_mean_last_1'] = None
         for fold in range(6):
@@ -161,3 +169,5 @@ def load_data():
     print(features, len(features))
 
     return train, train['isDefault'], test, features
+
+
