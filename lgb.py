@@ -126,7 +126,6 @@ def train_model_classification(X, X_test, y, params, num_classes=2,
         # 评价指标
         acc_scores.append(
             metrics_dict['lb_score_method']['sklearn_scoring_accuracy'](y_valid, np.argmax(y_pred_valid, axis=1)))
-        print(scores)
         scores.append(
             metrics_dict['lb_score_method']['sklearn_scoring_auc'](y_valid, y_pred_valid[:,1]))
         print(acc_scores)
@@ -154,6 +153,7 @@ def train_model_classification(X, X_test, y, params, num_classes=2,
 
     result_dict['oof'] = oof
     result_dict['prediction'] = prediction
+    result_dict['acc_scores'] = acc_scores
     result_dict['scores'] = scores
 
     if model_type == 'lgb' or model_type == 'xgb':
@@ -226,7 +226,8 @@ result_dict_lgb = train_model_classification(X=X,
                                              verbose=200,
                                              early_stopping_rounds=200)
 
+acc_score = np.mean(result_dict_lgb['acc_scores'])
 score = np.mean(result_dict_lgb['scores'])
 print(score)
 test['isDefault'] = result_dict_lgb['prediction'][:, 1]
-test[['id', 'isDefault']].to_csv('result/lgb_auc{}.csv'.format(score), index=False)
+test[['id', 'isDefault']].to_csv('result/lgb_acc{}auc{}.csv'.format(acc_score,score), index=False)

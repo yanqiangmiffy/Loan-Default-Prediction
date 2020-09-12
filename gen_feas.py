@@ -41,12 +41,12 @@ def load_data():
 
     # 去除重复列
     del train['n2.1']
-    del test['n2.1'],test['n2.2'],test['n2.3']
+    del test['n2.1'], test['n2.2'], test['n2.3']
     data = pd.concat([train, test], axis=0).reset_index(drop=True)
     # 删除列
     del data['policyCode']
 
-    print("data.shape:",data.shape)
+    print("data.shape:", data.shape)
     # ========== 数据处理 ===================
 
     numerical_fea = list(data.select_dtypes(exclude=['object']).columns)
@@ -57,7 +57,6 @@ def load_data():
     data[numerical_fea] = data[numerical_fea].fillna(data[numerical_fea].median())
     # 按照众数填充类别型特征
     data['employmentLength'] = data['employmentLength'].fillna(data['employmentLength'].mode()[0])
-
 
     # ================ 时间特征提取 ==================
     # employmentLength对象类型特征转换到数值
@@ -115,8 +114,10 @@ def load_data():
     cat_list = [i for i in train.columns if i not in ['id', 'isDefault', 'policyCode']]
     for i in tqdm(cat_list, desc="长尾分布特征处理"):
         if data[i].nunique() > 3:
-            data['{}_count'.format(i)] = data.groupby(['{}'.format(i)])['id'].transform('count')
-    # ===================== 分箱特征 ===============
+            data['{}_count'.format(i)] = data.groupby(['{}'.format(i)])['id'].transform('count') # 计数特征
+            # data[i + '_rank'] = data.groupby(i)['id'].transform('rank') # 排序特征
+
+    # ===================== amount_feas 分箱特征 ===============
     amount_feas = ['loanAmnt', 'interestRate', 'installment', 'annualIncome', 'dti',
                    'ficoRangeLow', 'ficoRangeHigh', 'openAcc', 'revolBal', 'revolUtil', 'totalAcc']
     for fea in tqdm(amount_feas, desc="分箱特征"):
@@ -127,12 +128,39 @@ def load_data():
         # 分位数分箱
         data['{}_bin3'.format(fea)] = pd.qcut(data[fea], 10, labels=False)
 
-    # ==================== 特征交互 ==================
+    # ===================== amount_feas 基本聚合特征 ===============
+    for f in tqdm(amount_feas, desc="amount_feas 基本聚合特征"):
+        for cate in ['grade','subGrade','employmentTitle','employmentLength','purpose','postCode','regionCode','earliesCreditLine']:
+            if f != cate:
+                data['{}_{}_medi'.format(cate, f)] = data.groupby(cate)[f].transform('median')
+                data['{}_{}_mean'.format(cate, f)] = data.groupby(cate)[f].transform('mean')
+                data['{}_{}_max'.format(cate, f)] = data.groupby(cate)[f].transform('max')
+                data['{}_{}_min'.format(cate, f)] = data.groupby(cate)[f].transform('min')
+                data['{}_{}_std'.format(cate, f)] = data.groupby(cate)[f].transform('std')
+    # =================== 基本交叉特征  =============================
+    for f1 in tqdm(amount_feas,desc="amount_feas 基本交叉特征"):
+        for f2 in amount_feas:
+            if f1 != f2:
+                colname = '{}_{}_ratio'.format(f1, f2)
+                data[colname] = data[f1].values / data[f2].values
+
+    # ==================== 匿名特征 ==================
+    n_feas=['n0', 'n1', 'n2', 'n4', 'n5', 'n6', 'n7', 'n8', 'n9', 'n10', 'n11', 'n12', 'n13', 'n14']
     # 其他衍生变量 mean 和 std
-    for item in tqdm(['n0', 'n1', 'n2',  'n4', 'n5', 'n6', 'n7', 'n8', 'n9', 'n10', 'n11', 'n12', 'n13', 'n14'],
+    for item in tqdm(n_feas,
                      desc="其他衍生变量 mean 和 std"):
         data['grade_to_mean_' + item] = data['grade'] / data.groupby([item])['grade'].transform('mean')
         data['grade_to_std_' + item] = data['grade'] / data.groupby([item])['grade'].transform('std')
+
+    # # 匿名特征信息提取
+    # data['nmean'] = data[n_feas].mean(1)
+    # data['ntd'] = data[n_feas].std(1)
+    # data['nsum'] = data[n_feas].sum(1)
+    # data['x_cross'] = ''
+    # for i in range(0, len(n_feas)):
+    #     data['x_cross'] = data['x_cross'].astype(str).values + '_' + data[n_feas[i]].astype(str).values
+    # lbl = LabelEncoder()
+    # data['x_cross'] = lbl.fit_transform(data['x_cross'].astype(str))
 
     # 类别特征nunique特征
     nuni_feat = ['grade', 'subGrade', 'employmentTitle',
@@ -166,6 +194,19 @@ def load_data():
                 data[(data['fold'] != fold) & (data['fold'] != 5)].groupby(i)['isDefault'].mean()
             )
         data[i + '_mean_last_1'] = data[i + '_mean_last_1'].astype(float)
+
+    # def oneHot(df, columns):
+    #     for col in columns:
+    #         pf = pd.get_dummies(df[col])
+    #         pf = pf.astype('float')
+    #         columns = {_: col + "_" + str(_) for _ in pf.columns}
+    #         pf.rename(columns=columns, inplace=True)
+    #         df = pd.concat([df, pf], axis=1)
+    #         # df.drop(col, axis=1, inplace=True) #326
+    #     return df
+    #
+    # data = oneHot(data, ['job', 'ethnic', 'gender', 'loanProduct'])
+
     no_fea = ['id', 'policyCode',
               'isDefault', 'ID', 'fold',
               ]
