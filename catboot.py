@@ -177,22 +177,23 @@ def train_model_classification(X, X_test, y, params, num_classes=2,
 #     'depth': 10,
 #     # 'logging_level': True
 # }
-cat_params = {
-        # 'n_estimators': 20000,
-        'learning_rate': 0.1,
-        'subsample': 0.7,
-        # 'custom_loss': 'AUC',
-        # 'eval_metric': 'AUC',
-        'l2_leaf_reg': 15.69352,
-        'max_depth': 9,
-        'bootstrap_type': 'Bernoulli',
-        'boosting_type': 'Ordered',
-        'use_best_model': True,
-        'verbose': -1,
-        'thread_count': 4,
-        # 'task_type':'GPU'
-    }
-
+# cat_params = {
+#     # 'n_estimators': 20000,
+#     'learning_rate': 0.1,
+#     'subsample': 0.7,
+#     # 'custom_loss': 'AUC',
+#     # 'eval_metric': 'AUC',
+#     'l2_leaf_reg': 15.69352,
+#     'max_depth': 9,
+#     'bootstrap_type': 'Bernoulli',
+#     'boosting_type': 'Ordered',
+#     'use_best_model': True,
+#     'verbose': -1,
+#     'thread_count': 4,
+#     # 'task_type':'GPU'
+# }
+cat_params = {'learning_rate': 0.1, 'depth': 9, 'l2_leaf_reg': 10, 'bootstrap_type': 'Bernoulli',
+              'od_type': 'Iter', 'od_wait': 50, 'random_seed': 11, 'allow_writing_files': False}
 n_fold = 5
 num_classes = 2
 print("分类个数num_classes:{}".format(num_classes))

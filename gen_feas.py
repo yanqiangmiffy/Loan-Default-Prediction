@@ -38,9 +38,15 @@ def load_data():
     train = pd.read_csv('data/train.csv')
     train_size = len(train)
     test = pd.read_csv('data/testA.csv')
-    data = pd.concat([train, test], axis=0).reset_index(drop=True)
 
+    # 去除重复列
+    del train['n2.1']
+    del test['n2.1'],test['n2.2'],test['n2.3']
+
+    data = pd.concat([train, test], axis=0).reset_index(drop=True)
+    print("data.shape:",data.shape)
     # ========== 数据处理 ===================
+
     numerical_fea = list(data.select_dtypes(exclude=['object']).columns)
     label = 'isDefault'
     numerical_fea.remove(label)
@@ -122,7 +128,7 @@ def load_data():
 
     # ==================== 特征交互 ==================
     # 其他衍生变量 mean 和 std
-    for item in tqdm(['n0', 'n1', 'n2', 'n2.1', 'n4', 'n5', 'n6', 'n7', 'n8', 'n9', 'n10', 'n11', 'n12', 'n13', 'n14'],
+    for item in tqdm(['n0', 'n1', 'n2',  'n4', 'n5', 'n6', 'n7', 'n8', 'n9', 'n10', 'n11', 'n12', 'n13', 'n14'],
                      desc="其他衍生变量 mean 和 std"):
         data['grade_to_mean_' + item] = data['grade'] / data.groupby([item])['grade'].transform('mean')
         data['grade_to_std_' + item] = data['grade'] / data.groupby([item])['grade'].transform('std')

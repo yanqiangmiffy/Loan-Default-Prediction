@@ -68,6 +68,7 @@ def train_model_classification(X, X_test, y, params, num_classes=2,
     # averaged predictions on train data
     prediction = np.zeros(shape=(len(X_test), num_classes))
     # list of scores on folds
+    acc_scores=[]
     scores = []
     # feature importance
     feature_importance = pd.DataFrame()
@@ -123,8 +124,12 @@ def train_model_classification(X, X_test, y, params, num_classes=2,
 
         oof[valid_index] = y_pred_valid
         # 评价指标
-        scores.append(
+        acc_scores.append(
             metrics_dict['lb_score_method']['sklearn_scoring_accuracy'](y_valid, np.argmax(y_pred_valid, axis=1)))
+        print(scores)
+        scores.append(
+            metrics_dict['lb_score_method']['sklearn_scoring_auc'](y_valid, y_pred_valid[:,1]))
+        print(acc_scores)
         print(scores)
         prediction += y_pred
 
@@ -145,6 +150,7 @@ def train_model_classification(X, X_test, y, params, num_classes=2,
             feature_importance = pd.concat([feature_importance, fold_importance], axis=0)
     prediction /= n_splits
     print('CV mean score: {0:.4f}, std: {1:.4f}.'.format(np.mean(scores), np.std(scores)))
+    print('CV mean score: {0:.4f}, std: {1:.4f}.'.format(np.mean(acc_scores), np.std(acc_scores)))
 
     result_dict['oof'] = oof
     result_dict['prediction'] = prediction
@@ -217,10 +223,10 @@ result_dict_lgb = train_model_classification(X=X,
                                              model_type='lgb',
                                              eval_metric='logloss',
                                              plot_feature_importance=True,
-                                             verbose=10,
+                                             verbose=200,
                                              early_stopping_rounds=200)
 
 score = np.mean(result_dict_lgb['scores'])
 print(score)
 test['isDefault'] = result_dict_lgb['prediction'][:, 1]
-test[['id', 'isDefault']].to_csv('result/lgb_{}.csv'.format(score), index=False)
+test[['id', 'isDefault']].to_csv('result/lgb_auc{}.csv'.format(score), index=False)
