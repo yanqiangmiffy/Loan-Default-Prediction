@@ -50,7 +50,7 @@ CV mean score: 0.8066, std: 0.0004.
 train_model_classification cost time:972.1086599826813
 0.80661375
 ```
-
+- 线下：catboost 0.80752375.csv 线上 0.7389
 
 ### 模型融合
 ```text

@@ -42,8 +42,10 @@ def load_data():
     # 去除重复列
     del train['n2.1']
     del test['n2.1'],test['n2.2'],test['n2.3']
-
     data = pd.concat([train, test], axis=0).reset_index(drop=True)
+    # 删除列
+    del data['policyCode']
+
     print("data.shape:",data.shape)
     # ========== 数据处理 ===================
 
@@ -55,8 +57,7 @@ def load_data():
     data[numerical_fea] = data[numerical_fea].fillna(data[numerical_fea].median())
     # 按照众数填充类别型特征
     data['employmentLength'] = data['employmentLength'].fillna(data['employmentLength'].mode()[0])
-    # 删除列
-    del data['policyCode']
+
 
     # ================ 时间特征提取 ==================
     # employmentLength对象类型特征转换到数值
