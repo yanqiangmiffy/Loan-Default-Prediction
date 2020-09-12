@@ -169,5 +169,3 @@ def load_data():
     print(features, len(features))
 
     return train, train['isDefault'], test, features
-
-
