@@ -57,6 +57,32 @@ CV mean score: 0.8077, std: 0.0004.
 train_model_classification cost time:1233.052993774414
 0.7402264822844884
 ```
+- 线下 `lgb_acc0.80779auc0.7403928902618715.csv` 线上 0.7399
+```text
+(1)去除：data['issueDate_hour'] = data['issueDate'].dt.hour
+(2)earliesCreditLine 转化为时间格式
+    def ym(x):
+        month, year = x.split('-')
+        month = month_maps[month]
+        return year + '-' + str(month)
+
+    data['earliesCreditLine'] = data['earliesCreditLine'].progress_apply(lambda x: ym(x))
+    data['earliesCreditLine'] = pd.to_datetime(data['earliesCreditLine'], format='%Y-%m')
+(3)添加lag特征
+(4) 调整基本聚合特征：只保留mean和std
+(5) 增加cat_list特征  增加转化率特征：
+    #cat_list = [i for i in train.columns if i not in ['id', 'isDefault', 'policyCode']]
+    cat_list = [i for i in data.columns if i not in ['id', 'isDefault', 'policyCode']]
+```
+
+```text
+[0.80796875, 0.80694375, 0.80818125, 0.80779375, 0.8080625]
+[0.7407775246570047, 0.7391459325455945, 0.7418385574863872, 0.7403826784630242, 0.7398197581573464]
+CV mean score: 0.7404, std: 0.0009.
+CV mean score: 0.8078, std: 0.0004.
+train_model_classification cost time:1030.9157075881958
+0.7403928902618715
+```
 ### xgboost
 ```text
 [0.80745625, 0.8065875, 0.80711875, 0.8072125, 0.8070375]
