@@ -115,7 +115,7 @@ def load_data():
     for i in tqdm(cat_list, desc="长尾分布特征处理"):
         if data[i].nunique() > 3:
             data['{}_count'.format(i)] = data.groupby(['{}'.format(i)])['id'].transform('count') # 计数特征
-            # data[i + '_rank'] = data.groupby(i)['id'].transform('rank') # 排序特征
+            data[i + '_rank'] = data.groupby(i)['id'].transform('rank') # 排序特征
 
     # ===================== amount_feas 分箱特征 ===============
     amount_feas = ['loanAmnt', 'interestRate', 'installment', 'annualIncome', 'dti',
@@ -137,7 +137,7 @@ def load_data():
                 data['{}_{}_max'.format(cate, f)] = data.groupby(cate)[f].transform('max')
                 data['{}_{}_min'.format(cate, f)] = data.groupby(cate)[f].transform('min')
                 data['{}_{}_std'.format(cate, f)] = data.groupby(cate)[f].transform('std')
-    # =================== 基本交叉特征  =============================
+    # =================== amount_feas 基本交叉特征  =============================
     for f1 in tqdm(amount_feas,desc="amount_feas 基本交叉特征"):
         for f2 in amount_feas:
             if f1 != f2:
@@ -152,15 +152,15 @@ def load_data():
         data['grade_to_mean_' + item] = data['grade'] / data.groupby([item])['grade'].transform('mean')
         data['grade_to_std_' + item] = data['grade'] / data.groupby([item])['grade'].transform('std')
 
-    # # 匿名特征信息提取
-    # data['nmean'] = data[n_feas].mean(1)
-    # data['ntd'] = data[n_feas].std(1)
-    # data['nsum'] = data[n_feas].sum(1)
-    # data['x_cross'] = ''
-    # for i in range(0, len(n_feas)):
-    #     data['x_cross'] = data['x_cross'].astype(str).values + '_' + data[n_feas[i]].astype(str).values
-    # lbl = LabelEncoder()
-    # data['x_cross'] = lbl.fit_transform(data['x_cross'].astype(str))
+    # 匿名特征信息提取
+    data['nmean'] = data[n_feas].mean(1)
+    data['ntd'] = data[n_feas].std(1)
+    data['nsum'] = data[n_feas].sum(1)
+    data['x_cross'] = ''
+    for i in tqdm(range(0, len(n_feas)),desc="匿名特征信息提取"):
+        data['x_cross'] = data['x_cross'].astype(str).values + '_' + data[n_feas[i]].astype(str).values
+    lbl = LabelEncoder()
+    data['x_cross'] = lbl.fit_transform(data['x_cross'].astype(str))
 
     # 类别特征nunique特征
     nuni_feat = ['grade', 'subGrade', 'employmentTitle',
@@ -214,6 +214,6 @@ def load_data():
     train = data[:train_size]
     test = data[train_size:]
 
-    print(features, len(features))
+    print(len(features),features)
 
     return train, train['isDefault'], test, features
