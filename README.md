@@ -83,6 +83,38 @@ CV mean score: 0.8078, std: 0.0004.
 train_model_classification cost time:1030.9157075881958
 0.7403928902618715
 ```
+
+- 线下 `lgb_acc0.807715auc0.7404322941427292.csv`  线上 0.7399
+1016 
+```text
+[0.80795, 0.807075, 0.807875, 0.8076625, 0.8080125]
+[0.7410214905507795, 0.738570364832511, 0.7415226626273519, 0.7407998724294863, 0.7402470802735167]
+CV mean score: 0.7404, std: 0.0010.
+CV mean score: 0.8077, std: 0.0003.
+train_model_classification cost time:988.2512986660004
+0.7404322941427292
+```
+
+```text
+# 缺失值统计特征
+    # 缺失值统计，统计存在缺失值的特征，构造缺失值相关计数特征
+    for i in tqdm(n_feas, desc="缺失值统计"):
+        a = data.loc[data[i] == -1]
+        e = a.groupby(['grade'])['id'].count().reset_index(name=i + '_grade_count')
+        data = data.merge(e, on='grade', how='left')
+
+        d = a.groupby(['subGrade'])['id'].count().reset_index(name=i + '_subGrade_count')
+        data = data.merge(d, on='subGrade', how='left')
+
+        m = a.groupby(['issueDate'])['id'].count().reset_index(name=i + '_issueDate_count')
+        data = data.merge(m, on='issueDate', how='left')
+
+        data['gradeloss_' + i] = data[i + '_grade_count'] / data['grade_count']
+        data['subGradeloss_' + i] = data[i + '_subGrade_count'] / data['subGrade_count']
+        data['issueDateloss_' + i] = data[i + '_issueDate_count'] / data['issueDate_count']
+    # ===================== 五折转化率特征 ====================
+```
+
 ### xgboost
 ```text
 [0.80745625, 0.8065875, 0.80711875, 0.8072125, 0.8070375]
@@ -120,3 +152,14 @@ sub['isDefault'] = sub['isDefault'].round(2)
 sub.to_csv("result/submission.csv",index=False)
 ```
 线上：score:0.7384
+
+```text
+lgb = pd.read_csv('result/lgb_acc0.80779auc0.7403928902618715.csv')
+# xgb = pd.read_csv('result/xgb_0.8070824999999999.csv')
+ctb = pd.read_csv('result/catboost0.8077625000000002.csv')
+sub = lgb.copy()
+sub['isDefault'] = (lgb['isDefault'].rank()**(0.68) * ctb['isDefault'].rank()**(0.32))/200000
+sub['isDefault'] = sub['isDefault'].round(2)
+sub.to_csv("result/submission.csv",index=False)
+```
+线上：score:0.7405~~~~

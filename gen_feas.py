@@ -53,10 +53,18 @@ def load_data():
     numerical_fea.remove('isDefault')
     numerical_fea.remove('id')
     # category_fea = list(filter(lambda x: x not in numerical_fea, list(data.columns)))
-    # 按照平均数填充数值型特征
-    data[numerical_fea] = data[numerical_fea].fillna(data[numerical_fea].median())
+
+    # 按照中位数填充数值型特征
+    loss_numerical_feas = ['revolUtil', 'pubRecBankruptcies', 'dti']
+    data[loss_numerical_feas] = data[loss_numerical_feas].fillna(data[loss_numerical_feas].median())
     # 按照众数填充类别型特征
-    data['employmentLength'] = data['employmentLength'].fillna(data['employmentLength'].mode()[0])
+    loss_categorical_feas = ['employmentLength', 'employmentTitle', 'title', 'postCode']
+    for cate_fea in loss_categorical_feas:
+        data[cate_fea] = data[cate_fea].fillna(data[cate_fea].mode()[0])
+    # 匿名特征
+    n_feas = ['n0', 'n1', 'n2', 'n4', 'n5', 'n6', 'n7', 'n8', 'n9', 'n10', 'n11', 'n12', 'n13', 'n14']
+    # 使用 -1 填充匿名特征 方面后续统计确实特征
+    data[loss_numerical_feas] = data[loss_numerical_feas].fillna(-1)
 
     # ================ 时间特征提取 ==================
     # employmentLength对象类型特征转换到数值 雇佣年限
@@ -135,8 +143,8 @@ def load_data():
     amount_feas = ['loanAmnt', 'interestRate', 'installment', 'annualIncome', 'dti',
                    'ficoRangeLow', 'ficoRangeHigh', 'openAcc', 'revolBal', 'revolUtil', 'totalAcc']
     for fea in tqdm(amount_feas, desc="分箱特征"):
-        # 通过除法映射到间隔均匀的分箱中，每个分箱的取值范围都是loanAmnt/100
-        data['{}_bin1'.format(fea)] = np.floor_divide(data[fea], 100)
+        # 通过除法映射到间隔均匀的分箱中，每个分箱的取值范围都是loanAmnt/1000
+        data['{}_bin1'.format(fea)] = np.floor_divide(data[fea], 1000)
         ## 通过对数函数映射到指数宽度分箱
         data['{}_bin2'.format(fea)] = np.floor(np.log10(data[fea]))
         # 分位数分箱
@@ -164,7 +172,6 @@ def load_data():
                 # data['{}_{}_diff'.format(f1, f2)] = data[f1].values - data[f2].values
 
     # ==================== 匿名特征 ==================
-    n_feas = ['n0', 'n1', 'n2', 'n4', 'n5', 'n6', 'n7', 'n8', 'n9', 'n10', 'n11', 'n12', 'n13', 'n14']
     # 其他衍生变量 mean 和 std
     for item in tqdm(n_feas,
                      desc="其他衍生变量 mean 和 std"):
@@ -205,6 +212,22 @@ def load_data():
             if i != j:
                 data['nuni_{0}_{1}'.format(i, j)] = data[i].map(data.groupby(i)[j].nunique())
 
+    # 缺失值统计特征
+    # 缺失值统计，统计存在缺失值的特征，构造缺失值相关计数特征
+    for i in tqdm(n_feas, desc="缺失值统计"):
+        a = data.loc[data[i] == -1]
+        e = a.groupby(['grade'])['id'].count().reset_index(name=i + '_grade_count')
+        data = data.merge(e, on='grade', how='left')
+
+        d = a.groupby(['subGrade'])['id'].count().reset_index(name=i + '_subGrade_count')
+        data = data.merge(d, on='subGrade', how='left')
+
+        m = a.groupby(['issueDate'])['id'].count().reset_index(name=i + '_issueDate_count')
+        data = data.merge(m, on='issueDate', how='left')
+
+        data['gradeloss_' + i] = data[i + '_grade_count'] / data['grade_count']
+        data['subGradeloss_' + i] = data[i + '_subGrade_count'] / data['subGrade_count']
+        data['issueDateloss_' + i] = data[i + '_issueDate_count'] / data['issueDate_count']
     # ===================== 五折转化率特征 ====================
     # cat_list = ['grade', 'subGrade', 'employmentTitle',
     #             'homeOwnership', 'verificationStatus', 'purpose',
