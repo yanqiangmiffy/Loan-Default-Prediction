@@ -137,7 +137,7 @@ def load_data():
     for i in tqdm(cat_list, desc="长尾分布特征处理"):
         if data[i].nunique() > 3:
             data['{}_count'.format(i)] = data.groupby(['{}'.format(i)])['id'].transform('count')  # 计数特征
-            data[i + '_rank'] = data.groupby(i)['id'].transform('rank')  # 排序特征
+            # data[i + '_rank'] = data.groupby(i)['id'].transform('rank')  # 排序特征
 
     # ===================== amount_feas 分箱特征 ===============
     amount_feas = ['loanAmnt', 'interestRate', 'installment', 'annualIncome', 'dti',
@@ -187,7 +187,7 @@ def load_data():
                 data['{}_{}_mean'.format(cate, f)] = data.groupby(cate)[f].transform('mean')
                 # data['{}_{}_max'.format(cate, f)] = data.groupby(cate)[f].transform('max')
                 # data['{}_{}_min'.format(cate, f)] = data.groupby(cate)[f].transform('min')
-                data['{}_{}_std'.format(cate, f)] = data.groupby(cate)[f].transform('std')
+                # data['{}_{}_std'.format(cate, f)] = data.groupby(cate)[f].transform('std')
     # 匿名特征信息提取
     data['nmean'] = data[n_feas].mean(1)
     data['ntd'] = data[n_feas].std(1)

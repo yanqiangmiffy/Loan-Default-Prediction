@@ -115,6 +115,17 @@ train_model_classification cost time:988.2512986660004
     # ===================== 五折转化率特征 ====================
 ```
 
+- 删除无用特征 线下`lgb_acc0.8079175auc0.7404045216502018.csv` 线上0.7400
+```text
+Early stopping, best iteration is:
+[487]	training's binary_logloss: 0.414764	training's auc: 0.782244	valid_1's binary_logloss: 0.438547	valid_1's auc: 0.739725
+[0.80831875, 0.8075, 0.80803125, 0.80783125, 0.80790625]
+[0.7409709557088971, 0.7385389215613893, 0.742264346768772, 0.7405231586315258, 0.7397252255804245]
+CV mean score: 0.7404, std: 0.0012.
+CV mean score: 0.8079, std: 0.0003.
+train_model_classification cost time:1985.6873161792755
+0.7404045216502018
+```
 ### xgboost
 ```text
 [0.80745625, 0.8065875, 0.80711875, 0.8072125, 0.8070375]
@@ -132,6 +143,17 @@ CV mean score: 0.8075, std: 0.0004.
 train_model_classification cost time:9510.13922739029
 0.8075325000000001
 ```
+
+- 去除部分特征
+
+```text
+[0.8077875, 0.8069625, 0.80764375, 0.8078875, 0.80765625]
+CV mean score: 0.8076, std: 0.0003.
+train_model_classification cost time:25125.02781534195
+0.8075875
+```
+线上 0.7402
+
 ### catboost
 ```text
 [0.80724375, 0.8059, 0.80655625, 0.80650625, 0.8068625]
@@ -140,6 +162,14 @@ train_model_classification cost time:972.1086599826813
 0.80661375
 ```
 - 线下：catboost 0.80752375.csv 线上 0.7389
+
+- 线下 catboost0.807885.csv  线上0.7407
+```text
+[0.808, 0.80755, 0.80818125, 0.80801875, 0.807675]
+CV mean score: 0.8079, std: 0.0002.
+train_model_classification cost time:2310.5629098415375
+0.807885
+```
 
 ### 模型融合
 ```text
@@ -162,4 +192,18 @@ sub['isDefault'] = (lgb['isDefault'].rank()**(0.68) * ctb['isDefault'].rank()**(
 sub['isDefault'] = sub['isDefault'].round(2)
 sub.to_csv("result/submission.csv",index=False)
 ```
-线上：score:0.7405~~~~
+线上：score:0.7405
+
+```text
+
+lgb = pd.read_csv('result/lgb_acc0.8079175auc0.7404045216502018.csv')
+xgb = pd.read_csv('result/xgb_0.8075875.csv')
+ctb = pd.read_csv('result/catboost0.807885.csv')
+sub = lgb.copy()
+sub['isDefault'] = (lgb['isDefault'].rank() ** (0.4) * xgb['isDefault'].rank() ** (0.3) * ctb['isDefault'].rank() ** (
+    0.3)) / 200000
+
+sub['isDefault'] = sub['isDefault'].round(2)
+sub.to_csv("result/submission.csv", index=False)
+```
+线上：score:0.7408
