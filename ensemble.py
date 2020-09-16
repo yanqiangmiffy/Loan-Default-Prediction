@@ -27,12 +27,49 @@ import pandas as pd
 # sub.to_csv("result/submission.csv",index=False) # 0.7405
 
 
-lgb = pd.read_csv('result/lgb_acc0.8079175auc0.7404045216502018.csv')
+#lgb = pd.read_csv('result/lgb_acc0.8079175auc0.7404045216502018.csv')
+#xgb = pd.read_csv('result/xgb_0.8075875.csv')
+#ctb = pd.read_csv('result/catboost0.807885.csv')
+#sub = lgb.copy()
+#sub['isDefault'] = (lgb['isDefault'].rank() ** (0.4) * xgb['isDefault'].rank() ** (0.3) * ctb['isDefault'].rank() ** (
+#    0.3)) / 200000
+
+#sub['isDefault'] = sub['isDefault'].round(2)
+#sub.to_csv("result/submission.csv", index=False)
+
+
+
+#lgb = pd.read_csv('result/lgb_acc0.8079175auc0.7404045216502018.csv')
+#xgb = pd.read_csv('result/xgb_0.8075875.csv')
+#ctb = pd.read_csv('result/catboost0.807885.csv')
+#sub = lgb.copy()
+#sub['isDefault'] = (lgb['isDefault'].rank() ** (0.2) * xgb['isDefault'].rank() ** (0.3) * ctb['isDefault'].rank() ** (
+#        0.5)) / 200000
+
+#sub['isDefault'] = sub['isDefault'].round(2)
+#sub.to_csv("result/submission.csv", index=False)
+# 0.7410
+
+#lgb = pd.read_csv('result/lgb_acc0.8079175auc0.7404045216502018.csv')
+#xgb = pd.read_csv('result/xgb_0.8075875.csv')
+#ctb = pd.read_csv('result/catboost0.807885.csv')
+#sub = lgb.copy()
+#sub['isDefault'] = (lgb['isDefault'].rank() ** (0.1) * xgb['isDefault'].rank() ** (0.2) * ctb['isDefault'].rank() ** (
+#            0.7)) / 200000
+
+#sub['isDefault'] = sub['isDefault'].round(2)
+#sub.to_csv("result/submission.csv", index=False)
+# 0.7410
+
+
+
+lgb = pd.read_csv('result/lgb_acc0.8079224999999999auc0.7402744005225992.csv')
 xgb = pd.read_csv('result/xgb_0.8075875.csv')
 ctb = pd.read_csv('result/catboost0.807885.csv')
 sub = lgb.copy()
-sub['isDefault'] = (lgb['isDefault'].rank() ** (0.4) * xgb['isDefault'].rank() ** (0.3) * ctb['isDefault'].rank() ** (
-    0.3)) / 200000
+sub['isDefault'] = (lgb['isDefault'].rank()**(0.15)*xgb['isDefault'].rank() ** (0.15) * ctb['isDefault'].rank() ** (
+                0.7)) / 200000
 
-sub['isDefault'] = sub['isDefault'].round(2)
+sub['isDefault'] = sub['isDefault'].round(4)
 sub.to_csv("result/submission.csv", index=False)
+

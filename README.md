@@ -126,6 +126,13 @@ CV mean score: 0.8079, std: 0.0003.
 train_model_classification cost time:1985.6873161792755
 0.7404045216502018
 ```
+
+- 加入word2vec特征 线上7402
+```text
+  data['rid'] = data.apply(lambda x: [i + 'n' + str(x[i]) for i in n_feas], axis=1)
+        data = w2v_feat(data)
+        del data['rid']
+```
 ### xgboost
 ```text
 [0.80745625, 0.8065875, 0.80711875, 0.8072125, 0.8070375]
@@ -207,3 +214,18 @@ sub['isDefault'] = sub['isDefault'].round(2)
 sub.to_csv("result/submission.csv", index=False)
 ```
 线上：score:0.7408
+
+
+```text
+lgb = pd.read_csv('result/lgb_acc0.8079224999999999auc0.7402744005225992.csv')
+xgb = pd.read_csv('result/xgb_0.8075875.csv')
+ctb = pd.read_csv('result/catboost0.807885.csv')
+sub = lgb.copy()
+sub['isDefault'] = (lgb['isDefault'].rank()**(0.15)*xgb['isDefault'].rank() ** (0.15) * ctb['isDefault'].rank() ** (
+                0.7)) / 200000
+
+sub['isDefault'] = sub['isDefault'].round(4)
+sub.to_csv("result/submission.csv", index=False)
+
+```
+线上：score：0.7410
