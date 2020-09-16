@@ -160,14 +160,14 @@ def train_model_classification(X, X_test, y, params, num_classes=2,
         if plot_feature_importance:
             feature_importance["importance"] /= n_splits
             cols = feature_importance[["feature", "importance"]].groupby("feature").mean().sort_values(
-                by="importance", ascending=False)[:50].index
+                by="importance", ascending=False).index
 
             best_features = feature_importance.loc[feature_importance.feature.isin(cols)]
-
-            plt.figure(figsize=(16, 12))
-            sns.barplot(x="importance", y="feature", data=best_features.sort_values(by="importance", ascending=False))
-            plt.title('LGB Features (avg over folds)')
-            plt.show()
+            best_features.to_csv('data/feature_importance_lgb.csv',index=None)
+            # plt.figure(figsize=(16, 12))
+            # sns.barplot(x="importance", y="feature", data=best_features.sort_values(by="importance", ascending=False))
+            # plt.title('LGB Features (avg over folds)')
+            # plt.show()
             result_dict['feature_importance'] = feature_importance
             # print(feature_importance)
     end_time = time.time()
@@ -222,7 +222,7 @@ result_dict_lgb = train_model_classification(X=X,
                                              folds=folds,
                                              model_type='lgb',
                                              eval_metric='logloss',
-                                             plot_feature_importance=True,
+                                             plot_feature_importance=False,
                                              verbose=200,
                                              early_stopping_rounds=200)
 
@@ -231,3 +231,10 @@ score = np.mean(result_dict_lgb['scores'])
 print(score)
 test['isDefault'] = result_dict_lgb['prediction'][:, 1]
 test[['id', 'isDefault']].to_csv('result/lgb_acc{}auc{}.csv'.format(acc_score,score), index=False)
+
+# 保存概率文件
+pd.DataFrame(result_dict_lgb['oof']).to_csv('models/lgb_acc{}auc{}trainoof.csv'.format(acc_score, score),
+                                                index=False, header=False)
+pd.DataFrame(result_dict_lgb['prediction']).to_csv(
+        'models/lgb_acc{}auc{}testoof.csv'.format(acc_score, score),
+        index=False, header=False)

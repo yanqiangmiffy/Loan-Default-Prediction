@@ -311,7 +311,7 @@ def load_data():
     test = data[train_size:]
 
     print(len(features), features)
-
+    del data
     return train, train['isDefault'], test, features
 
 train, train['isDefault'], test, features=load_data()
